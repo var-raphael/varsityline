@@ -281,11 +281,23 @@ async function checkAuthAndHandle(
 ) {
   const { key } = await context.params;
 
+  console.log("MCP auth check:", {
+    receivedKey: key,
+    expectedKeySet: !!process.env.MCP_SECRET_KEY,
+    match: key === process.env.MCP_SECRET_KEY,
+  });
+
   if (key !== process.env.MCP_SECRET_KEY) {
     return new Response("Not found", { status: 404 });
   }
 
-  return handler(req);
+  console.log("Auth passed, calling handler");
+  try {
+    return await handler(req);
+  } catch (err) {
+    console.error("Handler threw:", err);
+    throw err;
+  }
 }
 
 export {
