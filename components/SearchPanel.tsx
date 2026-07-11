@@ -73,7 +73,7 @@ export function SearchPanel({
       courseQuery.trim() || (cutoffValue !== "" ? `Cut-off ${comparator} ${cutoffValue}` : "All courses");
 
     const pdfBytes = await generateSearchResultsPdf(rows, label);
-    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const blob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
