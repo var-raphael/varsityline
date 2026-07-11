@@ -269,7 +269,7 @@ const handler = createMcpHandler(
     );
   },
   {},
-  { basePath: "/api" }
+  { basePath: "/api/mcp" }
 );
 
 // ============================================================
