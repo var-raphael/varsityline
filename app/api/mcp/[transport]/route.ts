@@ -269,35 +269,27 @@ const handler = createMcpHandler(
     );
   },
   {},
-  { basePath: "/api/mcp" }
+  { basePath: "/api" }
 );
 
 // ============================================================
-// Secret-key gate — checked before any tool call is allowed through
+// Secret-key gate — checked before any tool call is allowed through.
+// The key is passed as a query parameter (?key=...) rather than a
+// path segment, because the [transport] dynamic segment here is
+// reserved by mcp-handler for the transport type (e.g. "mcp", "sse")
+// and cannot double as our own auth token.
 // ============================================================
 async function checkAuthAndHandle(
   req: NextRequest,
-  context: { params: Promise<{ key: string }> }
+  context: { params: Promise<{ transport: string }> }
 ) {
-  const { key } = await context.params;
+  const key = req.nextUrl.searchParams.get("key");
 
-  console.log("MCP auth check:", {
-    receivedKey: key,
-    expectedKeySet: !!process.env.MCP_SECRET_KEY,
-    match: key === process.env.MCP_SECRET_KEY,
-  });
-
-  if (key !== process.env.MCP_SECRET_KEY) {
+  if (!key || key !== process.env.MCP_SECRET_KEY) {
     return new Response("Not found", { status: 404 });
   }
 
-  console.log("Auth passed, calling handler");
-  try {
-    return await handler(req);
-  } catch (err) {
-    console.error("Handler threw:", err);
-    throw err;
-  }
+  return handler(req);
 }
 
 export {
