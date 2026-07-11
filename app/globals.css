@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter", -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --radius-card: 10px;
+}
+
+:root {
+  --bg: #0F0E0D;
+  --bg-elevated: #171513;
+  --bg-card: #1C1917;
+  --border: #2A2622;
+  --text: #F2EDE6;
+  --text-muted: #A69C8F;
+  --text-faint: #6E655A;
+  --amber: #D9822B;
+  --amber-bright: #F5A623;
+  --amber-dim: rgba(217, 130, 43, 0.12);
+}
+
+[data-theme="light"] {
+  --bg: #FAF7F2;
+  --bg-elevated: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --border: #E8E1D6;
+  --text: #241F1A;
+  --text-muted: #6B6156;
+  --text-faint: #9B9186;
+  --amber: #C06A1A;
+  --amber-bright: #B85E10;
+  --amber-dim: rgba(192, 106, 26, 0.08);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+}
