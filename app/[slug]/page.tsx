@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/lib/supabase";
 import { StatusBadge } from "@/components/StatusBadge";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const LINK_ICONS = {
   official_site: Globe,
@@ -159,6 +160,7 @@ export default async function UniversityPage({
             style={{ color: "var(--text-muted)" }}
           >
             <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
               components={{
                 a: ({ ...props }) => (
                   <a {...props} target="_blank" rel="noopener noreferrer" style={{ color: "var(--amber)" }} />
