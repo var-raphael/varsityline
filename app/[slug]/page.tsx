@@ -91,11 +91,13 @@ export default async function UniversityPage({
               <thead>
                 <tr className="border-b" style={{ borderColor: "var(--border)" }}>
                   <Th>Course</Th>
-                  <Th className="hidden md:table-cell">Faculty</Th>
+                  <Th>Faculty</Th>
                   <Th>UTME</Th>
-                  <Th className="hidden sm:table-cell">DE</Th>
+                  <Th>DE</Th>
                   <Th>Aggregate</Th>
+                  <Th>Duration</Th>
                   <Th>O&apos;Level combo</Th>
+                  <Th>Notes</Th>
                   <Th></Th>
                 </tr>
               </thead>
@@ -107,20 +109,26 @@ export default async function UniversityPage({
                     style={{ borderColor: "var(--border)" }}
                   >
                     <td className="px-3.5 py-3 font-medium">{course.name}</td>
-                    <td className="hidden px-3.5 py-3 md:table-cell" style={{ color: "var(--text-muted)" }}>
+                    <td className="px-3.5 py-3" style={{ color: "var(--text-muted)" }}>
                       {course.faculty}
                     </td>
                     <td className="px-3.5 py-3 font-mono font-semibold" style={{ color: "var(--amber)" }}>
                       {course.cutoff_mark}
                     </td>
-                    <td className="hidden px-3.5 py-3 font-mono sm:table-cell" style={{ color: "var(--text-muted)" }}>
+                    <td className="px-3.5 py-3 font-mono" style={{ color: "var(--text-muted)" }}>
                       {course.de_eligible ? course.de_cutoff_mark : "—"}
                     </td>
                     <td className="px-3.5 py-3 font-mono" style={{ color: "var(--text-muted)" }}>
                       {course.aggregate ?? "—"}
                     </td>
+                    <td className="px-3.5 py-3 font-mono" style={{ color: "var(--text-muted)" }}>
+                      {course.duration_years ? `${course.duration_years} yrs` : "—"}
+                    </td>
                     <td className="px-3.5 py-3 text-xs" style={{ color: "var(--text-muted)" }}>
                       {course.subject_combo}
+                    </td>
+                    <td className="px-3.5 py-3 text-xs" style={{ color: "var(--text-faint)" }}>
+                      {course.notes ?? "—"}
                     </td>
                     <td className="px-3.5 py-3 text-right">
                       <a
