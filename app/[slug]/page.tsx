@@ -93,7 +93,7 @@ export default async function UniversityPage({
                   <Th>Course</Th>
                   <Th>Faculty</Th>
                   <Th>UTME</Th>
-                  <Th>DE</Th>
+                  <Th>Direct Entry</Th>
                   <Th>Aggregate</Th>
                   <Th>Duration</Th>
                   <Th>O&apos;Level combo</Th>
