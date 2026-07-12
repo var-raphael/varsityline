@@ -37,6 +37,32 @@ const handler = createMcpHandler(
     );
 
     server.tool(
+      "bulk_create_universities",
+      "Create multiple university records in one call. Atomic: if any row is invalid, none are inserted.",
+      {
+        universities: z.array(
+          z.object({
+            slug: z.string(),
+            name: z.string(),
+            state: z.string(),
+            type: z.enum(["Federal", "State", "Private"]),
+            jamb_cutoff: z.number(),
+            admission_status: z.enum(["open", "closed", "upcoming"]),
+          })
+        ),
+      },
+      async ({ universities }) => {
+        const { data, error } = await supabase
+          .from("universities")
+          .insert(universities)
+          .select();
+
+        if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }] };
+        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+      }
+    );
+
+    server.tool(
       "get_university",
       "Get a university by slug, including its courses and links",
       { slug: z.string() },
@@ -93,6 +119,27 @@ const handler = createMcpHandler(
     );
 
     server.tool(
+      "bulk_update_universities",
+      "Update multiple universities by id in one call, each with its own fields. Atomic: runs in a single transaction via RPC — if any id is missing or invalid, none are updated.",
+      {
+        updates: z.array(
+          z.object({
+            id: z.string(),
+            fields: z.record(z.string(), z.any()),
+          })
+        ),
+      },
+      async ({ updates }) => {
+        const { data, error } = await supabase.rpc("bulk_update_universities", {
+          updates,
+        });
+
+        if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }] };
+        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+      }
+    );
+
+    server.tool(
       "mark_verified",
       "Explicitly mark a university as freshly verified against its source",
       { slug: z.string() },
@@ -120,6 +167,22 @@ const handler = createMcpHandler(
       }
     );
 
+    server.tool(
+      "bulk_delete_universities",
+      "Delete multiple universities by id in one call. Atomic: single DELETE statement, all-or-nothing.",
+      { ids: z.array(z.string()) },
+      async ({ ids }) => {
+        const { data, error } = await supabase
+          .from("universities")
+          .delete()
+          .in("id", ids)
+          .select();
+
+        if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }] };
+        return { content: [{ type: "text", text: `Deleted ${data?.length ?? 0} universities` }] };
+      }
+    );
+
     // ============================================================
     // COURSES
     // ============================================================
@@ -138,6 +201,30 @@ const handler = createMcpHandler(
       },
       async (input) => {
         const { data, error } = await supabase.from("courses").insert(input).select().single();
+        if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }] };
+        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+      }
+    );
+
+    server.tool(
+      "bulk_create_courses",
+      "Create multiple courses in one call. Atomic: if any row is invalid, none are inserted.",
+      {
+        courses: z.array(
+          z.object({
+            university_id: z.string(),
+            name: z.string(),
+            faculty: z.string().optional(),
+            cutoff_mark: z.number(),
+            subject_combo: z.string().optional(),
+            source_url: z.string().optional(),
+            de_eligible: z.boolean().default(false),
+            de_cutoff_mark: z.number().optional(),
+          })
+        ),
+      },
+      async ({ courses }) => {
+        const { data, error } = await supabase.from("courses").insert(courses).select();
         if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }] };
         return { content: [{ type: "text", text: JSON.stringify(data) }] };
       }
@@ -182,6 +269,24 @@ const handler = createMcpHandler(
     );
 
     server.tool(
+      "bulk_update_courses",
+      "Update multiple courses by id in one call, each with its own fields. Atomic: runs in a single transaction via RPC — if any id is missing or invalid, none are updated.",
+      {
+        updates: z.array(
+          z.object({
+            id: z.string(),
+            fields: z.record(z.string(), z.any()),
+          })
+        ),
+      },
+      async ({ updates }) => {
+        const { data, error } = await supabase.rpc("bulk_update_courses", { updates });
+        if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }] };
+        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+      }
+    );
+
+    server.tool(
       "delete_course",
       "Delete a course by id",
       { course_id: z.string() },
@@ -189,6 +294,22 @@ const handler = createMcpHandler(
         const { error } = await supabase.from("courses").delete().eq("id", course_id);
         if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }] };
         return { content: [{ type: "text", text: `Deleted course ${course_id}` }] };
+      }
+    );
+
+    server.tool(
+      "bulk_delete_courses",
+      "Delete multiple courses by id in one call. Atomic: single DELETE statement, all-or-nothing.",
+      { course_ids: z.array(z.string()) },
+      async ({ course_ids }) => {
+        const { data, error } = await supabase
+          .from("courses")
+          .delete()
+          .in("id", course_ids)
+          .select();
+
+        if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }] };
+        return { content: [{ type: "text", text: `Deleted ${data?.length ?? 0} courses` }] };
       }
     );
 
@@ -213,6 +334,33 @@ const handler = createMcpHandler(
           .insert(input)
           .select()
           .single();
+
+        if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }] };
+        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+      }
+    );
+
+    server.tool(
+      "bulk_create_subscriptions",
+      "Create multiple subscription records in one call. Atomic: if any row is invalid, none are inserted.",
+      {
+        subscriptions: z.array(
+          z.object({
+            email: z.string(),
+            channel: z.enum(["email", "telegram"]),
+            telegram_handle: z.string().optional(),
+            university_ids: z.array(z.string()),
+            tier_price: z.number(),
+            paystack_reference: z.string(),
+            expires_at: z.string(),
+          })
+        ),
+      },
+      async ({ subscriptions }) => {
+        const { data, error } = await supabase
+          .from("subscriptions")
+          .insert(subscriptions)
+          .select();
 
         if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }] };
         return { content: [{ type: "text", text: JSON.stringify(data) }] };
@@ -258,6 +406,24 @@ const handler = createMcpHandler(
     );
 
     server.tool(
+      "bulk_update_subscriptions",
+      "Update multiple subscriptions by id in one call, each with its own fields. Atomic: runs in a single transaction via RPC — if any id is missing or invalid, none are updated.",
+      {
+        updates: z.array(
+          z.object({
+            id: z.string(),
+            fields: z.record(z.string(), z.any()),
+          })
+        ),
+      },
+      async ({ updates }) => {
+        const { data, error } = await supabase.rpc("bulk_update_subscriptions", { updates });
+        if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }] };
+        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+      }
+    );
+
+    server.tool(
       "delete_subscription",
       "Delete a subscription by id",
       { id: z.string() },
@@ -265,6 +431,22 @@ const handler = createMcpHandler(
         const { error } = await supabase.from("subscriptions").delete().eq("id", id);
         if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }] };
         return { content: [{ type: "text", text: `Deleted subscription ${id}` }] };
+      }
+    );
+
+    server.tool(
+      "bulk_delete_subscriptions",
+      "Delete multiple subscriptions by id in one call. Atomic: single DELETE statement, all-or-nothing.",
+      { ids: z.array(z.string()) },
+      async ({ ids }) => {
+        const { data, error } = await supabase
+          .from("subscriptions")
+          .delete()
+          .in("id", ids)
+          .select();
+
+        if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }] };
+        return { content: [{ type: "text", text: `Deleted ${data?.length ?? 0} subscriptions` }] };
       }
     );
   },
