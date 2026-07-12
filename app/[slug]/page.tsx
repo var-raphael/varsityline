@@ -4,6 +4,7 @@ import { ArrowLeft, ExternalLink, MessageCircle, Users, Globe } from "lucide-rea
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/lib/supabase";
 import { StatusBadge } from "@/components/StatusBadge";
+import ReactMarkdown from "react-markdown";
 
 const LINK_ICONS = {
   official_site: Globe,
@@ -153,10 +154,19 @@ export default async function UniversityPage({
         </Section>
 
         <Section label="What to know this cycle">
-          <div className="space-y-3 text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
-            {(uni.article_markdown ?? "").split("\n\n").filter(Boolean).map((para: string, i: number) => (
-              <p key={i}>{para}</p>
-            ))}
+          <div
+            className="space-y-3 text-sm leading-relaxed [&_a]:underline [&_a]:underline-offset-2 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+            style={{ color: "var(--text-muted)" }}
+          >
+            <ReactMarkdown
+              components={{
+                a: ({ ...props }) => (
+                  <a {...props} target="_blank" rel="noopener noreferrer" style={{ color: "var(--amber)" }} />
+                ),
+              }}
+            >
+              {uni.article_markdown ?? ""}
+            </ReactMarkdown>
           </div>
         </Section>
 
