@@ -102,7 +102,10 @@ export default async function UniversityPage({
                 </tr>
               </thead>
               <tbody>
-                {(uni.courses ?? []).map((course: any, i: number) => (
+                {(uni.courses ?? [])
+                  .slice()
+                  .sort((a: any, b: any) => a.name.localeCompare(b.name))
+                  .map((course: any, i: number) => (
                   <tr
                     key={course.id}
                     className={i !== uni.courses.length - 1 ? "border-b" : ""}
