@@ -94,6 +94,7 @@ export default async function UniversityPage({
                   <Th className="hidden md:table-cell">Faculty</Th>
                   <Th>UTME</Th>
                   <Th className="hidden sm:table-cell">DE</Th>
+                  <Th>Aggregate</Th>
                   <Th>O&apos;Level combo</Th>
                   <Th></Th>
                 </tr>
@@ -114,6 +115,9 @@ export default async function UniversityPage({
                     </td>
                     <td className="hidden px-3.5 py-3 font-mono sm:table-cell" style={{ color: "var(--text-muted)" }}>
                       {course.de_eligible ? course.de_cutoff_mark : "—"}
+                    </td>
+                    <td className="px-3.5 py-3 font-mono" style={{ color: "var(--text-muted)" }}>
+                      {course.aggregate ?? "—"}
                     </td>
                     <td className="px-3.5 py-3 text-xs" style={{ color: "var(--text-muted)" }}>
                       {course.subject_combo}

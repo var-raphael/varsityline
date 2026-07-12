@@ -198,6 +198,7 @@ const handler = createMcpHandler(
         source_url: z.string().optional(),
         de_eligible: z.boolean().default(false),
         de_cutoff_mark: z.number().optional(),
+        aggregate: z.number().optional(),
       },
       async (input) => {
         const { data, error } = await supabase.from("courses").insert(input).select().single();
@@ -220,6 +221,7 @@ const handler = createMcpHandler(
             source_url: z.string().optional(),
             de_eligible: z.boolean().default(false),
             de_cutoff_mark: z.number().optional(),
+            aggregate: z.number().optional(),
           })
         ),
       },
