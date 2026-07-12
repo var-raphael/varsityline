@@ -1,10 +1,38 @@
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, PDFFont } from "pdf-lib";
 
 interface CourseResultRow {
   courseName: string;
   universityName: string;
   universityState: string;
   cutoffMark: number;
+}
+
+/**
+ * Truncates text to fit within maxWidth, measuring actual glyph widths
+ * with the given font/size rather than guessing by character count.
+ * PDF fonts aren't monospace, so a fixed character limit either cuts
+ * text too early (wasting space) or too late (overflowing/overlapping
+ * the next column) depending on which letters happen to be in the string.
+ */
+function truncateToWidth(text: string, font: PDFFont, size: number, maxWidth: number): string {
+  if (font.widthOfTextAtSize(text, size) <= maxWidth) return text;
+
+  const ellipsis = "…";
+  const ellipsisWidth = font.widthOfTextAtSize(ellipsis, size);
+
+  let low = 0;
+  let high = text.length;
+  while (low < high) {
+    const mid = Math.ceil((low + high) / 2);
+    const candidateWidth = font.widthOfTextAtSize(text.slice(0, mid), size) + ellipsisWidth;
+    if (candidateWidth <= maxWidth) {
+      low = mid;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return text.slice(0, low).trimEnd() + ellipsis;
 }
 
 export async function generateSearchResultsPdf(
@@ -21,6 +49,7 @@ export async function generateSearchResultsPdf(
   const amber = rgb(0.75, 0.42, 0.1);
   const gray = rgb(0.4, 0.37, 0.34);
   const black = rgb(0.14, 0.12, 0.1);
+  const rowFontSize = 9;
 
   let page = pdfDoc.addPage([pageWidth, pageHeight]);
   let y = pageHeight - margin;
@@ -46,8 +75,17 @@ export async function generateSearchResultsPdf(
   });
   y -= 30;
 
-  // Table header
-  const col = { course: margin, university: margin + 180, state: margin + 340, cutoff: margin + 430 };
+  // Table columns — widened University since it's the tightest column
+  // (long official names + abbreviations in parentheses, e.g.
+  // "University of Lagos (UNILAG)"). Course narrowed slightly to
+  // compensate, State/Cutoff stay compact since their content is short.
+  const col = { course: margin, university: margin + 165, state: margin + 375, cutoff: margin + 435 };
+  const colWidth = {
+    course: col.university - col.course - 10,
+    university: col.state - col.university - 10,
+    state: col.cutoff - col.state - 10,
+  };
+
   page.drawText("Course", { x: col.course, y, size: 9, font: fontBold, color: black });
   page.drawText("University", { x: col.university, y, size: 9, font: fontBold, color: black });
   page.drawText("State", { x: col.state, y, size: 9, font: fontBold, color: black });
@@ -61,17 +99,22 @@ export async function generateSearchResultsPdf(
   });
   y -= 16;
 
+  // Sort alphabetically by university name before rendering
+  const sortedResults = results
+    .slice()
+    .sort((a, b) => a.universityName.localeCompare(b.universityName));
+
   // Rows
-  for (const row of results) {
+  for (const row of sortedResults) {
     newPageIfNeeded(20);
 
-    const courseText = row.courseName.length > 28 ? row.courseName.slice(0, 26) + "…" : row.courseName;
-    const uniText = row.universityName.length > 24 ? row.universityName.slice(0, 22) + "…" : row.universityName;
+    const courseText = truncateToWidth(row.courseName, font, rowFontSize, colWidth.course);
+    const uniText = truncateToWidth(row.universityName, font, rowFontSize, colWidth.university);
 
-    page.drawText(courseText, { x: col.course, y, size: 9, font, color: black });
-    page.drawText(uniText, { x: col.university, y, size: 9, font, color: black });
-    page.drawText(row.universityState, { x: col.state, y, size: 9, font, color: black });
-    page.drawText(String(row.cutoffMark), { x: col.cutoff, y, size: 9, font: fontBold, color: amber });
+    page.drawText(courseText, { x: col.course, y, size: rowFontSize, font, color: black });
+    page.drawText(uniText, { x: col.university, y, size: rowFontSize, font, color: black });
+    page.drawText(row.universityState, { x: col.state, y, size: rowFontSize, font, color: black });
+    page.drawText(String(row.cutoffMark), { x: col.cutoff, y, size: rowFontSize, font: fontBold, color: amber });
 
     y -= 20;
   }

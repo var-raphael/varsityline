@@ -34,13 +34,15 @@ export function SearchPanel({
 
   const states = Array.from(new Set(universities.map((u) => u.state))).sort();
 
-  const uniResults = universities.filter((u) => {
-    const q = uniQuery.trim().toLowerCase();
-    const matchesQuery = !q || u.name.toLowerCase().includes(q);
-    const matchesState = !uniState || u.state === uniState;
-    const matchesType = !uniType || u.type === uniType;
-    return matchesQuery && matchesState && matchesType;
-  });
+  const uniResults = universities
+    .filter((u) => {
+      const q = uniQuery.trim().toLowerCase();
+      const matchesQuery = !q || u.name.toLowerCase().includes(q);
+      const matchesState = !uniState || u.state === uniState;
+      const matchesType = !uniType || u.type === uniType;
+      return matchesQuery && matchesState && matchesType;
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const courseResults = allCourses
     .filter((c) => {
